@@ -223,10 +223,16 @@ class _HomePageState extends State<HomePage> {
                       ),
                       child: ListTile(
                         title: Text(item.nama ?? ''),
-                        subtitle: Text(
-                          '${item.satuan ?? ''} - Rp${item.hargaJual?.toStringAsFixed(2) ?? '0.00'}',
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text('[Kode] ${item.kode}'),
+                            Text('[Satuan] ${item.satuan ?? ''}'),
+                            Text('[Harga Beli] Rp${item.hargaBeli ?? ''}'),
+                            Text('[Harga Jual] Rp${item.hargaJual ?? ''}'),
+                          ],
                         ),
-                        trailing: Text(item.kode),
                         onTap: () => editItem(item),
                       ),
                     );
