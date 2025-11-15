@@ -1,17 +1,26 @@
 // lib/screens/home.dart
 
+// Import library Flutter dan Firebase serta model Item.
+// Flutter: UI
+// cloud_firestore: koneksi ke Firebase Cloud Firestore (database NoSQL di cloud)
+// models/items.dart: definisi model Item (toMap, fromMap, field)
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/items.dart';
 
+// definisi HomePage(), dari main.dart masuk ke sini!
+// Widget Stateful karena ada state (input, selectedItem, dsb.)
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
+  // masuk ke state
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
+  // Controller untuk input form di bagian atas halaman.
+  // Digunakan untuk mengambil/men-set nilai pada TextFormField.
   final formKey = GlobalKey<FormState>();
   final kodeController = TextEditingController();
   final namaController = TextEditingController();
@@ -19,12 +28,19 @@ class _HomePageState extends State<HomePage> {
   final hargaBeliController = TextEditingController();
   final hargaJualController = TextEditingController();
 
+  // Koneksi ke Firebase Cloud Firestore:
+  // - FirebaseFirestore.instance.collection('items') menunjuk ke koleksi "items"
+  // - Koleksi "items" berada di project Firebase yang terkonfigurasi di aplikasi
+  // - Dokumen pada koleksi ini disimpan dengan document ID = kode (lihat penggunaan .doc(kode))
+  // Untuk melihat data: buka Firebase Console -> Firestore Database -> collection "items"
   CollectionReference itemsRef = FirebaseFirestore.instance.collection('items');
 
+  // Menyimpan item yang sedang dipilih untuk keperluan edit/delete.
   Item? selectedItem;
 
   @override
   void dispose() {
+    // Bebaskan controller saat widget di-destroy untuk mencegah memory leak.
     kodeController.dispose();
     namaController.dispose();
     satuanController.dispose();
@@ -33,6 +49,10 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
+  // Simpan atau update item ke Firestore.
+  // - Validasi form dulu
+  // - Simpan dengan document ID sama dengan 'kode'
+  // - Field createdAt/updatedAt disimpan sebagai timestamp lokal saat ini
   Future<void> saveItem() async {
     if (!formKey.currentState!.validate()) return;
 
@@ -57,6 +77,7 @@ class _HomePageState extends State<HomePage> {
           ).toMap(),
         );
 
+    // Bersihkan form setelah berhasil disimpan.
     kodeController.clear();
     namaController.clear();
     satuanController.clear();
@@ -69,6 +90,7 @@ class _HomePageState extends State<HomePage> {
     ).showSnackBar(const SnackBar(content: Text('Item saved successfully')));
   }
 
+  // Hapus item dari Firestore by document ID (kode).
   Future<void> deleteItem(String kode) async {
     await itemsRef.doc(kode).delete();
     setState(() => selectedItem = null);
@@ -77,6 +99,7 @@ class _HomePageState extends State<HomePage> {
     ).showSnackBar(const SnackBar(content: Text('Item deleted successfully')));
   }
 
+  // Isi controller dengan data item untuk mengaktifkan mode edit.
   void editItem(Item item) {
     kodeController.text = item.kode;
     namaController.text = item.nama ?? '';
@@ -93,6 +116,8 @@ class _HomePageState extends State<HomePage> {
       body: Column(
         children: [
           // INPUTS
+          // Bagian form di atas: input kode, nama, satuan, harga beli, harga jual.
+          // Ada tombol Add/Update dan Delete (visible saat edit).
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Form(
@@ -163,6 +188,11 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
+
+          // LIST DATA
+          // Bagian menampilkan semua dokumen di koleksi 'items' menggunakan StreamBuilder.
+          // Stream: itemsRef.snapshots() -> real-time updates dari Firestore.
+          // Untuk setiap dokumen, data di-convert ke model Item via Item.fromMap.
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: itemsRef.snapshots(),
