@@ -17,21 +17,22 @@ import './screens/home.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-// Top-level background handler
+// Handler background untuk Firebase Messaging (dipanggil ketika app berjalan di background)
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  // You can do logging here if needed.
+  // Anda bisa menambahkan logging atau pemrosesan pesan di sini jika perlu.
 }
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
+// Inisialisasi notifikasi lokal & Firebase Messaging
 Future<void> initNotifications() async {
-  // Ask runtime permission (Android 13+)
+  // Minta izin runtime (mis. Android 13+)
   final settings = await FirebaseMessaging.instance.requestPermission();
-  // You could check settings.authorizationStatus here if you want.
+  // Anda bisa memeriksa settings.authorizationStatus di sini jika perlu.
 
-  // Create Android notification channel
+  // Buat channel notifikasi Android
   const AndroidNotificationChannel channel = AndroidNotificationChannel(
     'firestore_changes_channel',
     'Firestore Changes',
@@ -54,10 +55,10 @@ Future<void> initNotifications() async {
 
   await flutterLocalNotificationsPlugin.initialize(initSettings);
 
-  // Subscribe to topic so all devices get the same messages
+  // Berlangganan topik agar semua perangkat menerima pesan yang sama
   await FirebaseMessaging.instance.subscribeToTopic('firestore_changes');
 
-  // Foreground messages: show local notification
+  // Pesan saat aplikasi sedang berjalan di foreground: tampilkan notifikasi lokal
   FirebaseMessaging.onMessage.listen((RemoteMessage message) {
     final notification = message.notification;
     final android = message.notification?.android;
@@ -78,9 +79,9 @@ Future<void> initNotifications() async {
     }
   });
 
-  // When user taps a notification and opens the app
+  // Ketika pengguna mengetuk notifikasi dan membuka aplikasi
   FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-    // Optional: navigate to a specific page or show a dialog.
+    // Opsional: navigasi ke halaman tertentu atau tampilkan dialog.
   });
 }
 
